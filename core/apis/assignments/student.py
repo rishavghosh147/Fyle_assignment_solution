@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, Response,abort
 from core import db
 from core.apis import decorators
 from core.apis.responses import APIResponse
@@ -22,6 +22,8 @@ def list_assignments(p):
 @decorators.authenticate_principal
 def upsert_assignment(p, incoming_payload):
     """Create or Edit an assignment"""
+    if incoming_payload['content'] is None:
+        abort(400, description="Assignment with empty content cannot be submitted")
     assignment = AssignmentSchema().load(incoming_payload)
     assignment.student_id = p.student_id
 
@@ -38,11 +40,13 @@ def submit_assignment(p, incoming_payload):
     """Submit an assignment"""
     submit_assignment_payload = AssignmentSubmitSchema().load(incoming_payload)
 
-    submitted_assignment = Assignment.submit(
-        _id=submit_assignment_payload.id,
-        teacher_id=submit_assignment_payload.teacher_id,
-        auth_principal=p
-    )
-    db.session.commit()
-    submitted_assignment_dump = AssignmentSchema().dump(submitted_assignment)
-    return APIResponse.respond(data=submitted_assignment_dump)
+    if not Assignment.is_submitted(submit_assignment_payload.id):
+        submitted_assignment = Assignment.submit(
+            _id=submit_assignment_payload.id,
+            teacher_id=submit_assignment_payload.teacher_id,
+            auth_principal=p
+        )
+        db.session.commit()
+        submitted_assignment_dump = AssignmentSchema().dump(submitted_assignment)
+        return APIResponse.respond(data=submitted_assignment_dump)
+    return Response(response='{"error":"FyleError", "message": "only a draft assignment can be submitted"}', status=400, mimetype='application/json')
