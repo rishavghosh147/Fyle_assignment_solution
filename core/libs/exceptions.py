@@ -1,5 +1,6 @@
 class FyleError(Exception):
     status_code = 400
+    message='error_message'
 
     def __init__(self, status_code, message):
         Exception.__init__(self)

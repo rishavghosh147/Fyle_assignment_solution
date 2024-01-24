@@ -60,3 +60,33 @@ def test_regrade_assignment(client, h_principal):
 
     assert response.json['data']['state'] == AssignmentStateEnum.GRADED.value
     assert response.json['data']['grade'] == GradeEnum.B
+
+
+def test_get_all_teachers(client, h_principal):
+    response =client.get(
+        '/principal/teachers',
+        headers=h_principal
+    )
+    assert response.status_code==200
+
+
+def test_forbiden(client,h_teacher_2):
+    response=client.get(
+        '/principal/teachers',
+        headers=h_teacher_2
+    )
+
+    assert response.status_code==403
+
+def test_get_all_teach(client):
+    response =client.get(
+        '/principal/teachers'
+    )
+    assert response.status_code==401
+
+def test_regrade_assignment(client, h_principal):
+    response = client.post(
+        '/principal/teachers',
+        headers=h_principal
+    )
+    assert response.status_code == 405

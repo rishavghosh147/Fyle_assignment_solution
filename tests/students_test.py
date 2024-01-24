@@ -1,3 +1,6 @@
+from flask import jsonify
+
+
 def test_get_assignments_student_1(client, h_student_1):
     response = client.get(
         '/student/assignments',
@@ -86,3 +89,35 @@ def test_assignment_resubmit_error(client, h_student_1):
     assert response.status_code == 400
     assert error_response['error'] == 'FyleError'
     assert error_response["message"] == 'only a draft assignment can be submitted'
+
+
+def test_assignment_resubmit_without_teacherid(client, h_student_1):
+    response = client.post(
+        '/student/assignments',
+        headers=h_student_1,
+        json={
+            "id": 1
+        })
+    error_response = response.json
+    assert response.status_code == 400
+    assert error_response['error'] == 'FyleError'
+
+
+def test_assignment_edit_error(client, h_student_2):
+    """
+    case: try to edit a unsubmited assignment
+    """
+    response = client.post(
+        '/student/assignments',
+        headers=h_student_2,
+        json={
+            "id": 5,
+            "content": "some updated text"
+        })
+    assert response.status_code == 200
+
+def test_wrong_url_check(client):
+    response=client.get(
+        '/wrong/assignments'
+    )
+    assert response.status_code ==404

@@ -1,5 +1,5 @@
 import json
-from flask import request
+from flask import request,jsonify
 from core.libs import assertions
 from functools import wraps
 
@@ -39,8 +39,8 @@ def authenticate_principal(func):
             assertions.assert_true(p.teacher_id is not None, 'requester should be a teacher')
         elif request.path.startswith('/principal'):
             assertions.assert_true(p.principal_id is not None, 'requester should be a principal')
-        else:
-            assertions.assert_found(None, 'No such api')
+        # else:
+        #     assertions.assert_found(None, 'No such api')    /* this error has been handel on server.py file
 
         return func(p, *args, **kwargs)
     return wrapper

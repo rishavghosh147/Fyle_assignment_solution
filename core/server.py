@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import jsonify, request
 from marshmallow.exceptions import ValidationError
 from core import app
 from core.apis.assignments import student_assignments_resources, teacher_assignments_resources, principal_assignments_resources
@@ -22,7 +22,6 @@ def ready():
 
     return response
 
-
 @app.errorhandler(Exception)
 def handle_error(err):
     if isinstance(err, FyleError):
@@ -38,8 +37,11 @@ def handle_error(err):
             error=err.__class__.__name__, message=str(err.orig)
         ), 400
     elif isinstance(err, HTTPException):
-        return jsonify(
-            error=err.__class__.__name__, message=str(err)
-        ), err.code
+        all_apis = ['/student/assignments', '/student/assignments/submit', '/teacher/assignments', '/teacher/assignments/grade', '/principal/assignments', '/principal/teachers', '/principal/assignments/grade']
+        if request.path not in all_apis:
+            fyle_error = FyleError(status_code=404, message='No such API')
+            return jsonify(fyle_error.to_dict()), 404
+        else:
+            return jsonify(error=err.__class__.__name__, message=str(err)), err.code
 
     raise err
